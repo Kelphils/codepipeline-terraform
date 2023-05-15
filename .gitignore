@@ -1,0 +1,10 @@
+.terraform
+secrets.auto.tfvars
+*.tfstate.*
+*.tfstate
+*.terraform.*
+*.terraform/
+.DS_Store
+terraform-log*
+*.tfplan
+*.txt
