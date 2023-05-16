@@ -1,7 +1,18 @@
 # run the command below to specify the path for configuration of the
 # terraform state in S3 bucket with the DynamoDb table as the backend and encryption, locking enabled
 # terraform init -backend-config=backend.hcl
+locals {
+  # Dynamic repo list
+  deployment = {
+    Repo-1 = {
+      repo = "Kelphils/codepipeline-terraform"
+    }
+    # Repo-2 = {
+    #   repo = "GitHub-Account-Name/Repo-2-Name"
+    # }
 
+  }
+}
 module "vpc" {
   source                   = "./modules/vpc"
   second_octet             = var.second_octet
@@ -72,4 +83,15 @@ module "codeBuild" {
   codebuild_role = module.iam.codebuild_role_arn
 }
 
-
+module "codePipeline" {
+  source                           = "./modules/codePipeline"
+  kms_key_arn                      = module.codeBuild.kms_alias_key_arn
+  for_each                         = local.deployment
+  repository_in                    = each.value.repo
+  name_in                          = each.key
+  sns_topic_arn                    = module.codeDeploy.sns_topic_arn
+  codebuild_project_name           = module.codeBuild.codebuild_project_name
+  codedeploy_app_name              = module.codeDeploy.codedeploy_app_name
+  codedeploy_deployment_group_name = module.codeDeploy.codedeploy_group_name
+  code_pipeline_role_arn           = module.iam.codepipeline_role_arn
+}

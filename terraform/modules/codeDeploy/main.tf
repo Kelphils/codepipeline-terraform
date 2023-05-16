@@ -6,8 +6,52 @@ resource "aws_codedeploy_app" "wildfly_app" {
 }
 
 resource "aws_sns_topic" "wildfly_app_sns" {
-  name = "${var.project}-${var.environment}-sns-topic"
+  name   = "${var.project}-${var.environment}-sns-topic"
+  policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Id": "__default_policy_ID",
+  "Statement": [
+    {
+      "Sid": "__default_statement_ID",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "SNS:GetTopicAttributes",
+        "SNS:SetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:RemovePermission",
+        "SNS:DeleteTopic",
+        "SNS:Subscribe",
+        "SNS:ListSubscriptionsByTopic",
+        "SNS:Publish",
+        "SNS:Receive"
+      ],
+      "Resource": "arn:aws:sns:${local.region}:${local.account_id}:${var.project}-sns-topic",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceOwner": "${local.account_id}"
+        }
+      }
+    },
+	{
+      "Sid": "AWSCodeStarNotifications_publish",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "codestar-notifications.amazonaws.com"
+        ]
+      },
+      "Action": "SNS:Publish",
+      "Resource": "arn:aws:sns:${local.region}:${local.account_id}:${var.project}-sns-topic"
+    }
+  ]
 }
+EOF
+}
+
 
 resource "aws_codedeploy_deployment_config" "app_config" {
   deployment_config_name = "CodeDeployDefault2.EC2AllAtOnce"

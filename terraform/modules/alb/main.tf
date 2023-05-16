@@ -124,7 +124,7 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 # }
 
 resource "aws_lb" "main" {
-  name               = "CGW-${var.project}-${local.facing}-${var.environment}-alb"
+  name               = "${var.project}-${local.facing}-${var.environment}-alb"
   internal           = var.is_internal
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]

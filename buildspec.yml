@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto-17   # Sets up Java 17
+
+  pre_build:
+    commands:
+      - echo Logging versions for verification
+      - aws --version
+      - mvn --version   # Display Maven version for verification
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - mvn clean install   # Run Maven build commands here
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
+artifacts:
+  files:
+    - appspec.yml
+    - target/*.war   # Specify the artifact files you want to publish

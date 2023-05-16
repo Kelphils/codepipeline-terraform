@@ -128,7 +128,7 @@ resource "aws_codestarconnections_connection" "github_codepipeline" {
 }
 
 resource "aws_s3_bucket" "codepipeline_bucket" {
-  bucket        = "codepipeline-bucket-${data.aws_caller_identity.default.account_id}"
+  bucket        = "${var.project}-codepipeline-bucket-${data.aws_caller_identity.default.account_id}"
   force_destroy = true
 
 
