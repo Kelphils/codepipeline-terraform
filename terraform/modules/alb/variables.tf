@@ -31,3 +31,9 @@ variable "subnets" {
   description = "subnets to use for the application load balancer"
   type        = list(string)
 }
+
+variable "project" {
+  description = "The name of the project"
+  default     = "wildfly-app"
+  type        = string
+}

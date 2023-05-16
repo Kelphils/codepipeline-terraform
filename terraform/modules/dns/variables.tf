@@ -6,7 +6,7 @@ variable "domain_name" {
 
 variable "subdomain" {
   description = "The subdomain name of the service"
-  default     = "docks"
+  default     = "wildfly"
   type        = string
 }
 variable "alb_dns_name" {

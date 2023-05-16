@@ -6,7 +6,7 @@ variable "alb_sg" {
 
 variable "name" {
   description = "the name of your stack, e.g. \"demo\""
-  default     = "docker"
+  default     = "wildfly"
 }
 
 variable "environment" {
@@ -17,7 +17,7 @@ variable "environment" {
 
 variable "project" {
   description = "The name of the project"
-  default     = "docker-app"
+  default     = "wildfly-app"
   type        = string
 }
 

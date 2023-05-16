@@ -1,12 +1,12 @@
 variable "project" {
   description = "The name of the project"
-  default     = "docker-app"
+  default     = "wildfly-app"
   type        = string
 }
 
 variable "host_header_domains" {
   description = "The host header domains"
-  default     = ["docker.kelyinc.xyz"]
+  default     = ["wildfly.kelyinc.xyz"]
   type        = list(string)
 }
 

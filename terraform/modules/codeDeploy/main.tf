@@ -1,11 +1,11 @@
 # data "aws_caller_identity" "current" {}
 
-resource "aws_codedeploy_app" "docker_app" {
+resource "aws_codedeploy_app" "wildfly_app" {
   name             = "${var.project}-${var.environment}-code-deploy"
   compute_platform = "Server"
 }
 
-resource "aws_sns_topic" "docker_app_sns" {
+resource "aws_sns_topic" "wildfly_app_sns" {
   name = "${var.project}-${var.environment}-sns-topic"
 }
 
@@ -24,8 +24,8 @@ resource "aws_codedeploy_deployment_config" "app_config" {
 }
 
 resource "aws_codedeploy_deployment_group" "cd_dg" {
-  app_name              = aws_codedeploy_app.docker_app.name
-  deployment_group_name = "${aws_codedeploy_app.docker_app.name}-group"
+  app_name              = aws_codedeploy_app.wildfly_app.name
+  deployment_group_name = "${aws_codedeploy_app.wildfly_app.name}-group"
   service_role_arn      = var.code_deploy_role_arn
 
 
@@ -33,7 +33,7 @@ resource "aws_codedeploy_deployment_group" "cd_dg" {
     trigger_events = ["DeploymentFailure", "DeploymentSuccess", "DeploymentFailure", "DeploymentStop",
     "InstanceStart", "InstanceSuccess", "InstanceFailure"]
     trigger_name       = "event-trigger"
-    trigger_target_arn = aws_sns_topic.docker_app_sns.arn
+    trigger_target_arn = aws_sns_topic.wildfly_app_sns.arn
   }
 
   auto_rollback_configuration {

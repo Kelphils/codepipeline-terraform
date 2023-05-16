@@ -20,7 +20,7 @@ resource "aws_acm_certificate" "certificate" {
   // redirecting to the www. domain immediately.
   # subject_alternative_names = ["${var.subomain_name}", "www.${var.subdomain_name}"]
   tags = {
-    Name = "docker_app_acm_certificate"
+    Name = "wildfly_app_acm_certificate"
   }
 }
 

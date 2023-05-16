@@ -1,5 +1,5 @@
 locals {
-  docker-app-port = 8069
+  java-app-port = 8080
   tags = {
     Project-name = "${var.project}"
   }
@@ -8,7 +8,7 @@ locals {
 
 resource "aws_lb_target_group" "main" {
   name                 = "${var.project}-staging-tg"
-  port                 = local.docker-app-port
+  port                 = local.java-app-port
   protocol             = "HTTP"
   vpc_id               = var.vpc_id
   target_type          = "instance"

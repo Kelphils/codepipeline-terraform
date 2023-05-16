@@ -1,5 +1,5 @@
 data "aws_caller_identity" "default" {}
-
+data "aws_region" "default" {}
 #EC2 Code deploy service role
 resource "aws_iam_role" "ec2codedeploy_role" {
   name = "${var.project}_ec2_codedeploy_role"
@@ -21,7 +21,7 @@ resource "aws_iam_role" "ec2codedeploy_role" {
 EOF
 
   tags = {
-    Service = "${var.project}-role-${var.environment}"
+    Service = "${var.project}-${var.environment}-role"
   }
 
 }
@@ -122,4 +122,255 @@ resource "aws_iam_role_policy_attachment" "ssm_fullaccess_attach" {
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "${var.project}_cw_agent_instance_profile"
   role = aws_iam_role.ec2_cw_agent_ssm_full_role.name
+}
+
+# CodeBuild Role
+resource "aws_iam_role" "codebuildrole" {
+  assume_role_policy = jsonencode(
+    {
+      Statement = [
+        {
+          Action = "sts:AssumeRole"
+          Effect = "Allow"
+          Principal = {
+            Service = "codebuild.amazonaws.com"
+          }
+        },
+      ]
+      Version = "2012-10-17"
+    }
+  )
+  description           = "Allows CodeBuild to call AWS services on your behalf."
+  force_detach_policies = false
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+  ]
+  max_session_duration = 3600
+  name                 = "CodeBuildRole"
+
+  inline_policy {
+    name = "CodeBuild"
+    policy = jsonencode(
+      {
+        Statement = [
+          {
+            Action = [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+            ]
+            Effect = "Allow"
+            Resource = [
+              "*",
+            ]
+          },
+          {
+            Action = [
+              "s3:PutObject",
+              "s3:GetObject",
+              "s3:GetObjectVersion",
+              "s3:GetBucketAcl",
+              "s3:GetBucketLocation",
+            ]
+            Effect = "Allow"
+            Resource = [
+              "arn:aws:s3:::codepipeline-${data.aws_region.default.name}-*",
+            ]
+          },
+
+          {
+            Action = [
+              "codebuild:CreateReportGroup",
+              "codebuild:CreateReport",
+              "codebuild:UpdateReport",
+              "codebuild:BatchPutTestCases",
+              "codebuild:BatchPutCodeCoverages",
+            ]
+            Effect = "Allow"
+            Resource = [
+              "*",
+            ]
+          },
+          # Uncomment this block to allow CodeBuild to create and manage VPC resources
+          # {
+          #   "Effect" : "Allow",
+          #   "Action" : [
+          #     "ec2:CreateNetworkInterface",
+          #     "ec2:DescribeDhcpOptions",
+          #     "ec2:DescribeNetworkInterfaces",
+          #     "ec2:DeleteNetworkInterface",
+          #     "ec2:DescribeSubnets",
+          #     "ec2:DescribeSecurityGroups",
+          #     "ec2:DescribeVpcs"
+          #   ],
+          #   "Resource" : "*"
+          # },
+          # {
+          #   "Effect" : "Allow",
+          #   "Action" : [
+          #     "ec2:CreateNetworkInterfacePermission"
+          #   ],
+          #   "Resource" : "*",
+          # },
+        ]
+        Version = "2012-10-17"
+      }
+    )
+  }
+  tags = { Service = "${var.project}-${var.environment}-policy" }
+}
+
+
+# CodePipeline Role
+resource "aws_iam_role" "codepipeline" {
+  name               = "CodePipelineRole"
+  assume_role_policy = data.aws_iam_policy_document.cp_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "cp_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["codepipeline.amazonaws.com", "codebuild.amazonaws.com", "codedeploy.amazonaws.com", "ec2.amazonaws.com", "ecs-tasks.amazonaws.com"]
+    }
+  }
+
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.default.account_id}:root"]
+    }
+  }
+}
+
+
+resource "aws_iam_role_policy" "codepipelinerole_policy" {
+  name = "CodepipelineRole-Policy"
+  role = aws_iam_role.codepipeline.id
+
+  policy = <<EOF
+{
+    "Statement": [
+        {
+            "Action": [
+                "codestar-connections:*"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion",
+                "s3:GetBucketVersioning"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::*",
+                "arn:aws:s3:::*/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "codecommit:CancelUploadArchive",
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:UploadArchive"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "codedeploy:CreateDeployment",
+                "codedeploy:GetApplicationRevision",
+                "codedeploy:GetDeployment",
+                "codedeploy:GetDeploymentConfig",
+                "codedeploy:RegisterApplicationRevision"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "elasticbeanstalk:*",
+                "ec2:*",
+                "elasticloadbalancing:*",
+                "autoscaling:*",
+                "cloudwatch:*",
+                "s3:*",
+                "sns:*",
+                "cloudformation:*",
+                "rds:*",
+                "sqs:*",
+                "ecs:*",
+                "iam:PassRole"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "lambda:*"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "opsworks:CreateDeployment",
+                "opsworks:DescribeApps",
+                "opsworks:DescribeCommands",
+                "opsworks:DescribeDeployments",
+                "opsworks:DescribeInstances",
+                "opsworks:DescribeStacks",
+                "opsworks:UpdateApp",
+                "opsworks:UpdateStack"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:UpdateStack",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DeleteChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:ExecuteChangeSet",
+                "cloudformation:SetStackPolicy",
+                "cloudformation:ValidateTemplate",
+                "iam:PassRole"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        }
+    ],
+    "Version": "2012-10-17"
+}
+EOF
 }

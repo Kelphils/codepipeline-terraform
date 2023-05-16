@@ -1,7 +1,7 @@
 
 variable "project" {
   description = "The name of the project"
-  default     = "docker-app"
+  default     = "wildfly-app"
   type        = string
 }
 

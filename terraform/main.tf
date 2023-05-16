@@ -43,7 +43,7 @@ module "security_group" {
   environment = var.environment
   vpc_id      = module.vpc.vpc_id
   alb_sg      = module.alb.alb_security_group_id
-  # docker_instance_sg_id = module.docker_instance.docker_instance_sg_id
+  # wildfly_instance_sg_id = module.wildfly_instance.wildfly_instance_sg_id
 }
 
 module "target_group" {
@@ -55,16 +55,21 @@ module "target_group" {
 module "webServer" {
   source                  = "./modules/webServer"
   aws_lb_target_group_arn = module.target_group.target_group_arn
-  security_groups         = module.security_group.docker_app_sg_id
+  security_groups         = module.security_group.java_app_sg_id
   instance_profile        = module.iam.cw_agent_ssm_instance_profile
   subnets                 = module.vpc.private_subnets_id
-  # docker_instance_sg_id =
+  # wildfly_instance_sg_id =
 }
 
 module "codeDeploy" {
   source               = "./modules/codeDeploy"
   asg_name             = module.webServer.webserver_instance_ids
   code_deploy_role_arn = module.iam.codedeploy_role_arn
+}
+
+module "codeBuild" {
+  source         = "./modules/codeBuild"
+  codebuild_role = module.iam.codebuild_role_arn
 }
 
 

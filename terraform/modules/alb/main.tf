@@ -1,7 +1,7 @@
 # locals {
 #   http_port  = 80
 #   https_port = 443
-#   # docker_app_port     = 8069
+#   # wildfly_app_port     = 8069
 #   any_port     = 0
 #   any_protocol = "-1"
 #   tcp_protocol = "tcp"
@@ -29,7 +29,7 @@
 locals {
   http_port  = 80
   https_port = 443
-  # docker_app_port     = 8069
+  # wildfly_app_port     = 8069
   any_port     = 0
   any_protocol = "-1"
   tcp_protocol = "tcp"
@@ -59,9 +59,9 @@ resource "aws_security_group" "alb_sg" {
   tags        = local.terratag
 }
 
-# resource "aws_security_group" "docker_instance_sg" {
+# resource "aws_security_group" "wildfly_instance_sg" {
 #   name   = "${var.name}-ports-${var.environment}-sg"
-#    description = "Allow inbound traffic to the docker instance"
+#    description = "Allow inbound traffic to the wildfly instance"
 #   vpc_id = var.vpc_id
 #       tags = {
 #         Project-name = "${var.project}",
@@ -112,7 +112,7 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 
 # resource "aws_security_group_rule" "allow_all_output_outbound" {
 #   type              = "egress"
-#   security_group_id = aws_security_group.docker_instance_sg.id
+#   security_group_id = aws_security_group.wildfly_instance_sg.id
 #   description       = "Allow HTTP inbound traffic to all ports"
 
 #   # Allow all outbound requests
@@ -124,7 +124,7 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 # }
 
 resource "aws_lb" "main" {
-  name               = "CGW-alb-${local.facing}-${var.environment}"
+  name               = "CGW-${var.project}-${local.facing}-${var.environment}-alb"
   internal           = var.is_internal
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]

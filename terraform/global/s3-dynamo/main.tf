@@ -1,6 +1,6 @@
 # s3 bucket to store terraform state
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "terraform-state-bucket-for-docker"
+  bucket = "terraform-state-bucket-for-wildfly"
 
   # Prevent accidental deletion of this S3 bucket
   lifecycle {
@@ -39,7 +39,7 @@ resource "aws_s3_bucket_public_access_block" "public_access" {
 
 # DynamoDb locking by creating DynamoDb table for storing state with primary key of "LockID" to prevent concurrent runs
 resource "aws_dynamodb_table" "terraform_locks" {
-  name         = "terraform-docker-lock"
+  name         = "terraform-wildfly-lock"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 

@@ -1,5 +1,5 @@
 output "codedeploy_app_name" {
-  value = aws_codedeploy_app.docker_app.name
+  value = aws_codedeploy_app.wildfly_app.name
 }
 
 output "codedeploy_group_name" {

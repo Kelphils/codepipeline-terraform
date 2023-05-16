@@ -5,6 +5,6 @@ variable "environment" {
 
 variable "project" {
   description = "The name of the project"
-  default     = "docker-compose"
+  default     = "wildfly-compose"
   type        = string
 }

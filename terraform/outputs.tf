@@ -12,3 +12,8 @@ output "subdomain_name" {
   value       = module.dns.subdomain_name
   description = "The subdomain name of the service"
 }
+
+output "acm_cert_domain_name" {
+  value       = module.acm.acm_cert_domain_name
+  description = "The domain name of the certificate"
+}

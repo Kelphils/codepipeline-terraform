@@ -16,6 +16,7 @@ data "aws_ami" "ubuntu" {
 
 #  replace the instance with launch configuration to launch ec2 instances
 resource "aws_launch_configuration" "webserver" {
+  name                 = "${var.project}-${var.environment}-launch-configuration"
   image_id             = data.aws_ami.ubuntu.id
   instance_type        = "t2.small"
   security_groups      = [var.security_groups]
@@ -39,6 +40,7 @@ resource "aws_launch_configuration" "webserver" {
 
 # create autoscaling group from the launch configuration
 resource "aws_autoscaling_group" "webserver_group" {
+  name                 = "${var.project}-${var.environment}-asg"
   launch_configuration = aws_launch_configuration.webserver.name
   vpc_zone_identifier  = var.subnets
 
@@ -62,6 +64,12 @@ resource "aws_autoscaling_group" "webserver_group" {
     value               = "${var.project}-${var.environment}-Instance"
     propagate_at_launch = true
   }
+  tag {
+    key                 = "Terraform"
+    value               = "Instance-ManagedBy-Terraform"
+    propagate_at_launch = true
+  }
+
 }
 
 
